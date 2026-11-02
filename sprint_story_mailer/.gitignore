@@ -2,3 +2,4 @@ config.json
 *.log
 preview_*.html
 __pycache__/
+sent_state.json

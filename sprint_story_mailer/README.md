@@ -1,19 +1,34 @@
 # RTC Sprint Story Mailer
 
-Sprint bitiş günlerinde (2 haftada bir Salı) RTC'deki query'leri çalıştırır ve
-çıkan story'leri Outlook üzerinden şu adreslere mail atar:
+Sprint bitiş günlerinde RTC'deki story query'sini (`_QdyPMNaZEfG_RJ8I86d6LA`)
+çalıştırır ve sonuçları Outlook üzerinden şu adreslere mail atar:
 
 - sf01089@external.stellantis.com
 - t59612@tofas.com.tr
 
-RTC bağlantısı `release_sync_v4.py` ile aynı yöntemi kullanır (`j_security_check`
-login, OSLC 2.0 JSON, GCM context).
+## Nasıl çalışır
 
-## Neden PC'de çalışıyor (bulutta değil)?
+- Görev Zamanlayıcı script'i **her gün 16:00'da** çalıştırır (PC kapalıysa açılınca çalışır).
+- Sprint bitiş günleri **RTC'deki sprint takviminden** okunur (proje alanı
+  `_sTK-QebpEea8oNaj29Rsbg`). Okunamazsa yedek takvim kullanılır:
+  `anchor_end_date` = **2026-11-10**, 14 günde bir.
+- Son sprint bitiş gününün maili gönderilmediyse gönderir, gönderildiyse hiçbir şey yapmaz
+  (`sent_state.json`). Sprint günü kaçırılırsa (PC kapalı, VPN yok) sonraki
+  `catch_up_days` (3) gün içinde telafi edilir.
 
-RTC (`prsse.intra.chrysler.com`) şirket içi ağda / VPN arkasında. Claude'un bulut
-ortamı ve GitHub Actions bu sunucuya erişemez; Outlook da sadece PC'de var. Bu yüzden
-script PC'de **Windows Görev Zamanlayıcı** ile kendi kendine çalışır.
+## VPN / RTC bağlantısı kurulamazsa
+
+Sadece mail günüyse (sprint günü veya telafi günü):
+
+1. İlk başarısız denemede: **Windows bildirimi** + sf01089@external.stellantis.com
+   adresine **"[UYARI]" maili** ("VPN'e bağlanın, 15 dk'da bir tekrar denenecek").
+2. 15 dakikada bir, toplam 8 kez (yaklaşık 2 saat) tekrar dener. Bu arada VPN'e
+   bağlanırsanız mail kendiliğinden gider.
+3. Hepsi başarısız olursa: tekrar bildirim + uyarı maili. Ertesi gün yine dener.
+
+Diğer hatalarda (şifre hatalı, query hatası, vb.) de aynı şekilde bildirim yapılır.
+Outlook VPN olmadan da internet üzerinden mail gönderebildiği için uyarı maili ulaşır.
+Normal günlerde VPN yoksa sizi rahatsız etmez.
 
 ## Kurulum
 
@@ -21,35 +36,28 @@ script PC'de **Windows Görev Zamanlayıcı** ile kendi kendine çalışır.
    ```
    pip install -r requirements.txt
    ```
-2. `config.example.json` dosyasını `config.json` olarak kopyalayın ve doldurun:
-   - `sprint.anchor_end_date`: Bilinen bir sprint bitiş Salı'sı (YYYY-MM-DD).
-     Script bu tarihten itibaren her 14 günde bir mail atar.
-   - `sprint.end_dates`: (opsiyonel) Sprint günleri kayarsa tarihleri buraya liste
-     olarak yazın, örn. `["2026-11-03", "2026-11-17"]`. Liste doluysa sadece
-     bu tarihlerde mail gider, `anchor_end_date` dikkate alınmaz.
-   - `queries`: Her query için ya
-     - `saved_query_id` (RTC web'de kayıtlı query'yi çalıştırınca URL'deki
-       `id=_xxxxx` değeri), ya da
-     - `where` (OSLC where ifadesi, örn. `rtc_cm:plannedFor="<iteration URI>"`).
-     `only_stories: true` sadece Story tipindekileri listeler.
-3. RTC kullanıcı adı/şifresini ortam değişkeni olarak kaydedin (zamanlanmış görev
-   şifre soramaz). Yeni bir terminal açın:
+2. `config.example.json` dosyasını `config.json` olarak kopyalayın ve
+   `rtc.password` alanına şifrenizi yazın. `config.json` git'e gönderilmez
+   (`.gitignore`), sadece sizin PC'nizde durur.
+3. Sprint takvimini kontrol edin:
    ```
-   setx RTC_USER kullanici_adiniz
-   setx RTC_PASS sifreniz
+   python sprint_story_mailer.py --list-sprints
    ```
-4. Test edin:
+   "Son gün" sütununda mevcut sprintin bitişi **2026-11-10** görünmeli.
+   - 1 gün sonrası (11-11) görünüyorsa: `end_date_offset_days: -1` yapın.
+   - Alakasız timeline'lar / iterasyonlar listeleniyorsa: `timeline_name` veya
+     `name_filter` (örn. `"Sprint"`) ile daraltın.
+4. Test:
    ```
-   python sprint_story_mailer.py --check-date        (bugün sprint günü mü?)
-   python sprint_story_mailer.py --force --dry-run   (mail atmadan HTML önizleme üretir)
-   python sprint_story_mailer.py --force             (gerçekten mail atar)
+   python sprint_story_mailer.py --test-notify      (uyarı bildirimi + maili dener)
+   python sprint_story_mailer.py --force --dry-run  (mail atmadan HTML önizleme)
+   python sprint_story_mailer.py --force            (gerçekten mail atar)
    ```
+   Not: `--force` ile atılan mail, sprint gününün "gönderildi" kaydını oluşturmaz.
 5. Otomatik çalıştırma: `create_scheduled_task.bat` dosyasına çift tıklayın.
-   Her Salı 16:00'da çalışan bir görev oluşturur; sprint günü değilse script
-   hiçbir şey yapmadan çıkar.
 
 ## Notlar
 
-- PC o saatte açık, oturum açık ve VPN bağlı olmalı (Outlook ve RTC için).
-- Loglar `sprint_story_mailer.log` dosyasına yazılır.
-- Şifre değişirse `setx RTC_PASS ...` komutunu tekrar çalıştırın.
+- Görev "kullanıcı oturum açıkken" çalışır (Outlook için gerekli).
+- Loglar: `sprint_story_mailer.log`
+- Şifre değişirse `config.json` içindeki `rtc.password` alanını güncelleyin.

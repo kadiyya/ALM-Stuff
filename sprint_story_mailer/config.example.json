@@ -2,19 +2,28 @@
   "rtc": {
     "base_url": "https://prsse.intra.chrysler.com/ccm",
     "project_area_id": "_7mXNoEMaEeiCPPDi6mAKZQ",
-    "gcm_config": "https://prsse.intra.chrysler.com/gc/configuration/215"
+    "gcm_config": "https://prsse.intra.chrysler.com/gc/configuration/215",
+    "username": "sf01089",
+    "password": "SIFRENIZI_BURAYA_YAZIN"
   },
 
   "sprint": {
-    "anchor_end_date": "2026-11-03",
+    "source": "rtc",
+    "project_area_uuid": "_sTK-QebpEea8oNaj29Rsbg",
+    "timeline_name": "",
+    "name_filter": "",
+    "end_date_offset_days": 0,
+    "catch_up_days": 3,
+
+    "anchor_end_date": "2026-11-10",
     "interval_days": 14,
     "end_dates": []
   },
 
   "queries": [
     {
-      "name": "Sprint Sonu Story'leri",
-      "saved_query_id": "_BURAYA_QUERY_ID",
+      "name": "Sprint Story'leri",
+      "saved_query_id": "_QdyPMNaZEfG_RJ8I86d6LA",
       "only_stories": true
     }
   ],
@@ -22,6 +31,12 @@
   "mail": {
     "to": ["sf01089@external.stellantis.com", "t59612@tofas.com.tr"],
     "cc": [],
-    "subject": "Sprint Sonu Story Listesi - {date}"
+    "subject": "Sprint Sonu Story Listesi - {date}",
+    "error_notify_to": ["sf01089@external.stellantis.com"]
+  },
+
+  "retry": {
+    "attempts": 8,
+    "wait_minutes": 15
   }
 }
