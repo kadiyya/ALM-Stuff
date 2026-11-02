@@ -1,0 +1,27 @@
+{
+  "rtc": {
+    "base_url": "https://prsse.intra.chrysler.com/ccm",
+    "project_area_id": "_7mXNoEMaEeiCPPDi6mAKZQ",
+    "gcm_config": "https://prsse.intra.chrysler.com/gc/configuration/215"
+  },
+
+  "sprint": {
+    "anchor_end_date": "2026-11-03",
+    "interval_days": 14,
+    "end_dates": []
+  },
+
+  "queries": [
+    {
+      "name": "Sprint Sonu Story'leri",
+      "saved_query_id": "_BURAYA_QUERY_ID",
+      "only_stories": true
+    }
+  ],
+
+  "mail": {
+    "to": ["sf01089@external.stellantis.com", "t59612@tofas.com.tr"],
+    "cc": [],
+    "subject": "Sprint Sonu Story Listesi - {date}"
+  }
+}

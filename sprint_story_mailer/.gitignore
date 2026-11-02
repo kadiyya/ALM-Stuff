@@ -1,0 +1,4 @@
+config.json
+*.log
+preview_*.html
+__pycache__/
